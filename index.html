@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Chess-like Game</title>
+    <style>
+        /* Basic styling for the page */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #222;
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(5, 60px);
+            grid-template-rows: repeat(5, 60px);
+            gap: 5px;
+            margin: 20px auto;
+            width: max-content;
+        }
+
+        .cell {
+            border: 1px solid #444;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #333;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .A-piece {
+            background-color: #2a9df4;
+        }
+
+        .B-piece {
+            background-color: #f45d48;
+        }
+
+        #status {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #4CAF50;
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        #move-history {
+            margin-top: 20px;
+            text-align: left;
+            max-width: 300px;
+            margin: 20px auto;
+        }
+
+        #move-history ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #move-history li {
+            margin: 5px 0;
+            color: #ddd;
+        }
+
+        #move-history li.captured {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Advanced Chess-like Game</h1>
+    <div id="status">Player A wins!</div>
+
+    <div id="board"></div>
+
+    <div id="move-history">
+        <h3>Move History</h3>
+        <ul>
+            <!-- <li>A-P2: F</li>
+            <li>B-P1: F</li>
+            <li>A-H2: FR</li>
+            <li>B-H2: FL (Captured A-P3)</li>
+            <li>A-P2: F</li>
+            <li>B-P2: F</li>
+            <li>A-H1: R (Captured B-H2)</li>
+            <li>B-H1: L</li> -->
+        </ul>
+    </div>
+
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        var socket = io();
+
+        socket.on('update', function(gameState) {
+            updateBoard(gameState);
+        });
+
+        function updateBoard(gameState) {
+            var boardElement = document.getElementById('board');
+            boardElement.innerHTML = '';
+            for (var row = 0; row < 5; row++) {
+                for (var col = 0; col < 5; col++) {
+                    var cell = document.createElement('div');
+                    cell.className = 'cell';
+
+                    var piece = getPieceAtPosition(gameState, row, col);
+                    if (piece) {
+                        cell.textContent = piece;
+                        cell.classList.add(piece[0] === 'A' ? 'A-piece' : 'B-piece');
+                    }
+
+                    boardElement.appendChild(cell);
+                }
+            }
+        }
+
+        function getPieceAtPosition(gameState, row, col) {
+            for (var player in gameState.players) {
+                for (var piece in gameState.players[player]) {
+                    var position = gameState.players[player][piece];
+                    if (position[0] === row && position[1] === col) {
+                        return piece;
+                    }
+                }
+            }
+            return null;
+        }
+
+        function sendMove(piece, move) {
+            socket.emit('move', { piece: piece, move: move });
+        }
+    </script>
+</body>
+</html>
